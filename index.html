@@ -135,7 +135,7 @@
             // ヒーローセクション
             const heroSection = document.createElement('section');
             heroSection.className = 'fade-in bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-6 text-center mb-6 relative overflow-hidden';
-            heroSection.style.backgroundImage = "linear-gradient(rgba(255, 247, 237, 0.88), rgba(254, 215, 170, 0.88)), url('https://i.pinimg.com/1200x/13/a5/c5/13a5c505d1f5dc7b4385e995ef82339d.jpg')";
+            heroSection.style.backgroundImage = "linear-gradient(rgba(255, 247, 237, 0.88), rgba(254, 215, 170, 0.88)), url('https://electrictoolboy.com/media/wp-content/uploads/2021/09/image-21.jpeg')";
             heroSection.style.backgroundSize = 'cover';
             heroSection.style.backgroundPosition = 'center';
             heroSection.innerHTML = `
@@ -148,6 +148,25 @@
                 </div>
             `;
             container.appendChild(heroSection);
+
+            // 登録フォームボタン
+            const registrationSection = document.createElement('section');
+            registrationSection.className = 'fade-in mb-6';
+            registrationSection.innerHTML = `
+                <div class="grid grid-cols-2 gap-3">
+                    <a href="https://docs.google.com/forms/d/e/1FAIpQLSdV-R8QIhW8V44nbvqP6lJyvnXW-5bfWPg5k5vZNtXuOGb9Iw/viewform" target="_blank" class="bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-xl text-center transition-all shadow-sm hover:shadow-md">
+                        <i data-lucide="building-2" class="w-6 h-6 mx-auto mb-2"></i>
+                        <p class="text-sm font-bold">事業所の方はこちら</p>
+                        <p class="text-xs opacity-90 mt-1">登録フォーム</p>
+                    </a>
+                    <a href="https://docs.google.com/forms/d/e/1FAIpQLSfiiBMhnuQpY6-Mag9PZo7wJoMm604Y_9r4IKCPuRGCwjMPVg/viewform" target="_blank" class="bg-green-500 hover:bg-green-600 text-white p-4 rounded-xl text-center transition-all shadow-sm hover:shadow-md">
+                        <i data-lucide="user-check" class="w-6 h-6 mx-auto mb-2"></i>
+                        <p class="text-sm font-bold">見学希望の方はこちら</p>
+                        <p class="text-xs opacity-90 mt-1">登録フォーム</p>
+                    </a>
+                </div>
+            `;
+            container.appendChild(registrationSection);
 
             // 見学の流れ・声セクション
             const flowSection = document.createElement('section');
