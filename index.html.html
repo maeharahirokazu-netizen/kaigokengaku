@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>千葉県かいごの職場見学BOX</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* お知らせのスクロールバーカスタマイズ */
+        .news-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+        .news-scroll::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        .news-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .news-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen relative">
+
+    <!-- ヘッダー -->
+    <header class="bg-white shadow-sm sticky top-0 z-20">
+        <div class="max-w-md mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2 cursor-pointer" onclick="showHome()">
+                <div class="bg-orange-400 text-white p-1.5 rounded-lg">
+                    <i data-lucide="coffee" class="w-5 h-5"></i>
+                </div>
+                <h1 class="text-lg font-bold text-slate-800 tracking-tight">千葉県かいごの職場見学BOX</h1>
+            </div>
+            
+            <!-- ログインボタンエリア -->
+            <div id="auth-btn-area">
+                <button onclick="openAuthModal()" class="text-slate-300 hover:text-orange-500 p-2">
+                    <i data-lucide="lock" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main id="main-content" class="max-w-md mx-auto px-4 py-6 space-y-8 min-h-[calc(100vh-140px)]">
+        <!-- データ読み込み中の表示 -->
+        <div class="text-center py-12">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+            <p class="text-slate-500 mt-4">データを読み込んでいます...</p>
+        </div>
+    </main>
+
+    <!-- フッター -->
+    <footer class="bg-slate-800 text-slate-300 py-8 text-center text-sm">
+        <div class="max-w-md mx-auto px-4 space-y-4">
+            <div class="flex items-center justify-center gap-2 text-white font-bold">
+                <i data-lucide="coffee" class="text-orange-400 w-4 h-4"></i> 千葉県かいごの職場見学BOX
+            </div>
+            <p class="text-xs text-slate-500">© 2024 Kaigo Kengaku Box.</p>
+        </div>
+    </footer>
+
+    <!-- パスワード認証モーダル -->
+    <div id="auth-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-xs p-6 relative">
+            <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            <div class="text-center mb-6">
+                <div class="bg-slate-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-500">
+                    <i data-lucide="lock" class="w-6 h-6"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-800">事業所ログイン</h3>
+                <p class="text-xs text-slate-500 mt-1">見学希望者リストの閲覧には<br/>パスワードが必要です。</p>
+            </div>
+            <input type="password" id="password-input" placeholder="パスワードを入力" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 mb-4 focus:outline-none focus:border-orange-500">
+            <button onclick="handleAuth()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-lg shadow transition-colors">認証する</button>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // Apps Script ウェブアプリのURL
+        const API_BASE_URL = "https://script.google.com/macros/s/AKfycbwCG2OOMxw6TUcHECoHkVwMp15mjqvOHb_vRJfE_D6lsvs6tiXGwXp8k5DmKbIPe7lN/exec";
+        
+        const PASSWORD = 'chiba-kaigo';
+
+        // エリア定義
+        const areas = [
+            { id: 'chiba-ichihara', name: '千葉・市原圏域', code: '千葉・市原圏域' },
+            { id: 'togane', name: '東葛北部・東葛南部圏域', code: '東葛北部・東葛南部圏域' },
+            { id: 'inba', name: '印旛・香取・海匝圏域', code: '印旛・香取・海匝圏域' },
+            { id: 'kimitsu', name: '君津・安房圏域', code: '君津・安房圏域' },
+            { id: 'sanbu', name: '山武・長生・夷隅圏域', code: '山武・長生・夷隅圏域' }
+        ];
+
+        // 状態管理
+        let currentView = 'home';
+        let selectedAreaId = null;
+        let isAuthenticated = false;
+        let expandedFacilityIds = new Set();
+        
+        // データを格納する変数
+        let facilitiesData = [];
+        let seekersData = [];
+        
+        // お知らせデータ（静的）
+        const newsData = [
+            {
+                date: '2025/02/15',
+                title: 'サイトをオープンしました',
+                content: '千葉県かいごの職場見学BOXがオープンしました。気軽に介護の職場を見学できます。'
+            },
+            {
+                date: '2025/02/10',
+                title: '事業所の登録を開始',
+                content: '介護事業所の皆様、ぜひご登録ください。'
+            },
+            {
+                date: '2025/02/05',
+                title: '求職者の登録を開始',
+                content: '介護の仕事に興味がある方、まずは登録してみませんか？'
+            },
+            {
+                date: '2025/02/01',
+                title: 'システムテスト中',
+                content: 'サイトオープンに向けて準備中です。'
+            }
+        ];
+
+        // データ読み込み関数
+        async function loadData() {
+            try {
+                console.log('データ読み込み開始...');
+                
+                // 事業所データ取得
+                const facilitiesResponse = await fetch(`${API_BASE_URL}?type=facilities`);
+                facilitiesData = await facilitiesResponse.json();
+                
+                // 求職者データ取得
+                const seekersResponse = await fetch(`${API_BASE_URL}?type=seekers`);
+                seekersData = await seekersResponse.json();
+                
+                console.log('データ読み込み完了:', {
+                    facilities: facilitiesData.length,
+                    seekers: seekersData.length
+                });
+                
+                // 画面を初期化
+                initializeApp();
+                
+            } catch (error) {
+                console.error('データ読み込みエラー:', error);
+                const main = document.getElementById('main-content');
+                main.innerHTML = `
+                    <div class="text-center py-12">
+                        <div class="text-red-500 mb-4">
+                            <i data-lucide="alert-circle" class="w-12 h-12 mx-auto"></i>
+                        </div>
+                        <p class="text-slate-700 font-bold mb-2">データの読み込みに失敗しました</p>
+                        <p class="text-slate-500 text-sm mb-4">しばらくしてから再度お試しください。</p>
+                        <button onclick="location.reload()" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg">
+                            再読み込み
+                        </button>
+                    </div>
+                `;
+                setTimeout(() => lucide.createIcons(), 0);
+            }
+        }
+
+        // アプリ初期化関数
+        function initializeApp() {
+            render();
+        }
+
+        // 表示ロジック
+        function render() {
+            const main = document.getElementById('main-content');
+            main.innerHTML = '';
+            
+            setTimeout(() => lucide.createIcons(), 0);
+            
+            if (currentView === 'home') {
+                renderHome(main);
+            } else if (currentView === 'facilityList') {
+                renderFacilityList(main);
+            } else if (currentView === 'seekers') {
+                renderSeekers(main);
+            }
+            
+            updateAuthButton();
+        }
+
+        function renderHome(container) {
+            container.innerHTML = `
+                <!-- ヒーロー -->
+                <section class="text-center py-8 fade-in">
+                    <div class="bg-gradient-to-r from-orange-400 to-orange-500 text-white p-6 rounded-2xl shadow-lg">
+                        <h2 class="text-2xl font-bold mb-2">介護の職場を、見に行こう。</h2>
+                        <p class="text-sm opacity-90">まずは気軽に見学してみませんか？</p>
+                    </div>
+                </section>
+
+                <!-- エリア選択 -->
+                <section class="fade-in">
+                    <div class="flex items-center gap-2 mb-4">
+                        <i data-lucide="map-pin" class="w-5 h-5 text-orange-500"></i>
+                        <h3 class="text-lg font-bold text-slate-800">エリアを選択</h3>
+                    </div>
+                    <div class="grid grid-cols-1 gap-3">
+                        ${areas.map(area => {
+                            const areaFacilities = facilitiesData.filter(f => f.area === area.code);
+                            return `
+                                <button onclick="handleAreaSelect('${area.id}')" class="bg-white hover:bg-orange-50 border-2 border-slate-200 hover:border-orange-500 p-4 rounded-xl text-left transition-all shadow-sm hover:shadow-md group">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <div class="bg-slate-100 group-hover:bg-orange-100 p-2 rounded-lg transition-colors">
+                                                <i data-lucide="building-2" class="w-5 h-5 text-slate-500 group-hover:text-orange-500"></i>
+                                            </div>
+                                            <div>
+                                                <div class="font-bold text-slate-800 group-hover:text-orange-600 text-base">${area.name}</div>
+                                                <div class="text-xs text-slate-400 mt-0.5">${areaFacilities.length}件の事業所</div>
+                                            </div>
+                                        </div>
+                                        <i data-lucide="chevron-right" class="w-5 h-5 text-slate-300 group-hover:text-orange-500"></i>
+                                    </div>
+                                </button>
+                            `;
+                        }).join('')}
+                    </div>
+                </section>
+
+                <!-- お知らせ -->
+                <section class="fade-in">
+                    <div class="flex items-center gap-2 mb-4">
+                        <i data-lucide="megaphone" class="w-5 h-5 text-orange-500"></i>
+                        <h3 class="text-lg font-bold text-slate-800">お知らせ</h3>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 divide-y divide-slate-100 max-h-80 overflow-y-auto news-scroll">
+                        ${newsData.map(news => `
+                            <div class="p-4 hover:bg-slate-50 transition-colors">
+                                <div class="text-xs text-orange-500 font-bold mb-1">${news.date}</div>
+                                <div class="text-sm font-bold text-slate-800 mb-1">${news.title}</div>
+                                <div class="text-xs text-slate-600">${news.content}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </section>
+            `;
+            setTimeout(() => lucide.createIcons(), 0);
+        }
+
+        function renderFacilityList(container) {
+            const selectedArea = areas.find(a => a.id === selectedAreaId);
+            const areaFacilities = facilitiesData.filter(f => f.area === selectedArea.code);
+            
+            container.innerHTML = `
+                <!-- 戻るボタン -->
+                <div class="fade-in">
+                    <button onclick="showHome()" class="flex items-center gap-2 text-slate-600 hover:text-orange-500 mb-4 transition-colors">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                        <span class="text-sm font-bold">エリア選択に戻る</span>
+                    </button>
+                </div>
+
+                <!-- エリア名 -->
+                <section class="fade-in mb-6">
+                    <div class="bg-gradient-to-r from-orange-400 to-orange-500 text-white p-6 rounded-2xl shadow-lg">
+                        <div class="flex items-center gap-2 mb-2">
+                            <i data-lucide="map-pin" class="w-5 h-5"></i>
+                            <h2 class="text-xl font-bold">${selectedArea.name}</h2>
+                        </div>
+                        <p class="text-sm opacity-90">${areaFacilities.length}件の事業所が見つかりました</p>
+                    </div>
+                </section>
+
+                <!-- 事業所リスト -->
+                <section class="space-y-4 fade-in">
+                    ${areaFacilities.map(facility => {
+                        const isExpanded = expandedFacilityIds.has(facility.id);
+                        return `
+                            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                                <!-- カード上部（常に表示） -->
+                                <div class="p-4">
+                                    <div class="flex items-start justify-between gap-3 mb-3">
+                                        <h3 class="font-bold text-slate-800 text-base leading-snug">${facility.name}</h3>
+                                        <span class="shrink-0 text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full font-bold">${facility.facilityType || '-'}</span>
+                                    </div>
+                                    
+                                    ${renderDetailRow('エリア', facility.area)}
+                                    ${renderBulletList('歓迎', facility.tags)}
+                                    ${renderDetailRow('雇用形態', facility.employmentType)}
+                                    
+                                    <div class="mt-4 flex gap-2">
+                                        <button onclick="toggleDetails('${facility.id}')" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2">
+                                            <i data-lucide="${isExpanded ? 'chevron-up' : 'chevron-down'}" class="w-4 h-4"></i>
+                                            ${isExpanded ? '詳細を閉じる' : '詳細を見る'}
+                                        </button>
+                                        <a href="https://docs.google.com/forms/d/e/1FAIpQLScU7Nh4J20qB_Xs00XIkpyGyS3hjbDVdcugPVDckqcLyXri8A/viewform?entry.308812531=${facility.id}&entry.1322249521=${encodeURIComponent(facility.name)}" target="_blank" class="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2">
+                                            <i data-lucide="calendar" class="w-4 h-4"></i> 見学を申し込む
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <!-- 詳細情報（展開時のみ表示） -->
+                                ${isExpanded ? `
+                                    <div class="bg-slate-50 p-4 border-t border-slate-200 space-y-3">
+                                        ${renderDetailRow('受入対象者', facility.target)}
+                                        ${renderDetailRow('経験', facility.experience)}
+                                        ${renderDetailRow('年齢', facility.age)}
+                                        ${renderDetailRow('週の勤務日数', facility.daysPerWeek)}
+                                        ${renderDetailRow('1日の時間', facility.hoursPerDay)}
+                                        ${renderDetailRow('勤務時間', facility.workingHours)}
+                                        ${renderDetailRow('担当者', facility.contactPerson)}
+                                        ${renderDetailRow('電話', facility.phone)}
+                                        ${renderDetailRow('メール', facility.email)}
+                                        ${renderDetailRow('住所', facility.address)}
+                                        ${facility.website && facility.website !== 'なし' ? `
+                                            <div class="flex items-start text-sm">
+                                                <span class="w-24 shrink-0 text-slate-400 font-bold text-xs pt-0.5">HP</span>
+                                                <a href="${facility.website}" target="_blank" class="text-orange-500 hover:text-orange-600 underline font-medium break-all">${facility.website}</a>
+                                            </div>
+                                        ` : ''}
+                                        ${facility.description ? `
+                                            <div class="bg-white p-3 rounded-lg border border-slate-200">
+                                                <div class="text-xs text-slate-400 font-bold mb-1">事業所からの一言</div>
+                                                <div class="text-sm text-slate-700">${facility.description}</div>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `;
+                    }).join('')}
+                </section>
+            `;
+            
+            setTimeout(() => lucide.createIcons(), 0);
+        }
+
+        function renderSeekers(container) {
+            if (!isAuthenticated) {
+                showHome();
+                return;
+            }
+            
+            container.innerHTML = `
+                <!-- 戻るボタン -->
+                <div class="fade-in">
+                    <button onclick="showHome()" class="flex items-center gap-2 text-slate-600 hover:text-orange-500 mb-4 transition-colors">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                        <span class="text-sm font-bold">ホームに戻る</span>
+                    </button>
+                </div>
+
+                <!-- ヘッダー -->
+                <section class="fade-in mb-6">
+                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-2xl shadow-lg">
+                        <div class="flex items-center gap-2 mb-2">
+                            <i data-lucide="users" class="w-5 h-5"></i>
+                            <h2 class="text-xl font-bold">見学希望者リスト</h2>
+                        </div>
+                        <p class="text-sm opacity-90">${seekersData.length}名の求職者が登録中</p>
+                    </div>
+                </section>
+
+                <!-- 求職者リスト -->
+                <section class="space-y-4 fade-in">
+                    ${seekersData.map(seeker => `
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+                            <div class="flex items-start justify-between gap-3 mb-3">
+                                <div>
+                                    <div class="font-bold text-slate-800 text-base mb-1">求職者ID: ${seeker.id}</div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full font-bold">${seeker.interest}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-2">
+                                ${renderDetailRow('お住まい', seeker.location)}
+                                ${renderDetailRow('性別', seeker.gender)}
+                                ${renderDetailRow('年齢', seeker.age)}
+                                ${renderDetailRow('資格', seeker.qualification)}
+                                ${renderDetailRow('働き方', seeker.employmentType)}
+                                ${renderDetailRow('週の希望', seeker.daysPerWeek)}
+                                ${renderDetailRow('1日の時間', seeker.hoursPerDay)}
+                                ${renderDetailRow('時間帯', seeker.workingHours)}
+                                ${seeker.concerns ? `
+                                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 mt-3">
+                                        <div class="text-xs text-slate-400 font-bold mb-1">聞きたいこと・不安なこと</div>
+                                        <div class="text-sm text-slate-700">${seeker.concerns}</div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            
+                            <div class="mt-3">
+                                <a href="https://docs.google.com/forms/d/e/1FAIpQLSdtx3pwHHeVGRPZhuwWke8bRkaSM4dEvyDi48cKAiT4eMPWlA/viewform?entry.1369073720=${seeker.id}" target="_blank" class="w-full bg-white border-2 border-slate-400 text-slate-600 hover:bg-slate-50 font-bold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2">
+                                    <i data-lucide="mail" class="w-4 h-4"></i> 見学にお誘いする
+                                </a>
+                                <p class="text-xs text-slate-400 text-center mt-2">※対象者から返信がない場合もあります。ご了承ください。</p>
+                            </div>
+                        </div>
+                    `).join('')}
+                </section>
+            `;
+            
+            setTimeout(() => lucide.createIcons(), 0);
+        }
+
+        // ヘルパー関数
+        function renderDetailRow(label, value) {
+            return `
+                <div class="flex items-start text-sm">
+                    <span class="w-24 shrink-0 text-slate-400 font-bold text-xs pt-0.5">${label}</span>
+                    <span class="text-slate-700 font-medium">${value || '-'}</span>
+                </div>`;
+        }
+
+        function renderBulletList(label, value) {
+            if (!value) return `
+                <div class="flex items-start text-sm">
+                    <span class="w-24 shrink-0 text-slate-400 font-bold text-xs pt-0.5">${label}</span>
+                    <span class="text-slate-700 font-medium">-</span>
+                </div>`;
+            
+            const items = value.split(',').map(item => item.trim()).filter(item => item);
+            return `
+                <div class="flex items-start text-sm">
+                    <span class="w-24 shrink-0 text-slate-400 font-bold text-xs pt-0.5">${label}</span>
+                    <div class="text-slate-700 font-medium space-y-1">
+                        ${items.map(item => `<div class="flex items-start gap-2"><span class="text-orange-500">•</span><span>${item}</span></div>`).join('')}
+                    </div>
+                </div>`;
+        }
+
+        function updateAuthButton() {
+            const authBtnArea = document.getElementById('auth-btn-area');
+            if (isAuthenticated) {
+                authBtnArea.innerHTML = `
+                    <button onclick="handleLogout()" class="text-orange-500 hover:text-orange-600 p-2">
+                        <i data-lucide="log-out" class="w-5 h-5"></i>
+                    </button>
+                `;
+            } else {
+                authBtnArea.innerHTML = `
+                    <button onclick="openAuthModal()" class="text-slate-300 hover:text-orange-500 p-2">
+                        <i data-lucide="lock" class="w-5 h-5"></i>
+                    </button>
+                `;
+            }
+            setTimeout(() => lucide.createIcons(), 0);
+        }
+
+        // アクション関数
+        function showHome() {
+            currentView = 'home';
+            render();
+        }
+
+        function handleAreaSelect(id) {
+            selectedAreaId = id;
+            currentView = 'facilityList';
+            window.scrollTo(0, 0);
+            render();
+        }
+
+        function toggleDetails(id) {
+            if (expandedFacilityIds.has(id)) {
+                expandedFacilityIds.delete(id);
+            } else {
+                expandedFacilityIds.add(id);
+            }
+            render();
+        }
+
+        function openAuthModal() {
+            document.getElementById('auth-modal').classList.remove('hidden');
+            document.getElementById('password-input').focus();
+        }
+
+        function closeAuthModal() {
+            document.getElementById('auth-modal').classList.add('hidden');
+        }
+
+        function handleAuth() {
+            const input = document.getElementById('password-input');
+            if (input.value === PASSWORD) {
+                isAuthenticated = true;
+                currentView = 'seekers';
+                closeAuthModal();
+                input.value = '';
+                render();
+            } else {
+                alert('パスワードが違います');
+                input.value = '';
+                input.focus();
+            }
+        }
+
+        function handleLogout() {
+            isAuthenticated = false;
+            currentView = 'home';
+            render();
+        }
+
+        // Enterキーでパスワード認証
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !document.getElementById('auth-modal').classList.contains('hidden')) {
+                handleAuth();
+            }
+        });
+
+        // ページ読み込み時にデータを取得
+        window.addEventListener('DOMContentLoaded', loadData);
+    </script>
+</body>
+</html>
