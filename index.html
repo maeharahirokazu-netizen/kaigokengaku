@@ -52,11 +52,7 @@
     </header>
 
     <main id="main-content" class="max-w-md mx-auto px-4 py-6 space-y-8 min-h-[calc(100vh-140px)]">
-        <!-- データ読み込み中の表示 -->
-        <div class="text-center py-12">
-            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
-            <p class="text-slate-500 mt-4">データを読み込んでいます...</p>
-        </div>
+        <!-- コンテンツがJavaScriptで描画されます -->
     </main>
 
     <!-- フッター -->
@@ -89,9 +85,6 @@
 
     <!-- JavaScript -->
     <script>
-        // Apps Script ウェブアプリのURL
-        const API_BASE_URL = "https://script.google.com/macros/s/AKfycbwCG2OOMxw6TUcHECoHkVwMp15mjqvOHb_vRJfE_D6lsvs6tiXGwXp8k5DmKbIPe7lN/exec";
-        
         const PASSWORD = 'chiba-kaigo';
 
         // エリア定義
@@ -109,78 +102,17 @@
         let isAuthenticated = false;
         let expandedFacilityIds = new Set();
         
-        // データを格納する変数
-        let facilitiesData = [];
-        let seekersData = [];
+        // テストデータ（最新のExcelから取得）
+        let facilitiesData = [{"ID":"F001","事業所の名称":"特別養護老人ホーム 幕張の郷","エリア":"千葉・市原圏域","見学を受入できる対象者（複数回答可）":"将来介護職を探すかもしれない, 介護職にしようか迷っている","歓迎チェック （複数回答可）":"無資格OK, 未経験OK, 中高年歓迎","介護の仕事経験":"未経験OK","中高年世代の採用":"中高年歓迎","雇用形態":"アルバイト, 正社員","募集の日数（週） （複数回答可）":"週2～3日程度","募集の時間数（日） （複数回答可）":"4H","募集の時間（〇時～〇時）":"9:00～16:00（相談可）","担当者名":"見学担当","電話番号":"043-000-0001","連絡先メール":"sample1@example.com","HP":"https://example.com/makuhari","地図で見る":"千葉県千葉市花見川区幕張町1-1","種別 （複数回答可）":"特別養護老人ホーム","事業所からの一言":"アットホームな雰囲気で、未経験の方でも安心してスタートできます。まずは見学にお越しください。"},{"ID":"F002","事業所の名称":"グループホーム 船橋の陽だまり","エリア":"東葛北部・東葛南部圏域","見学を受入できる対象者（複数回答可）":"介護職を探している","歓迎チェック （複数回答可）":"有資格者のみ, 経験者のみ","介護の仕事経験":"経験者のみ","中高年世代の採用":"そのほか","雇用形態":"正社員","募集の日数（週） （複数回答可）":"週5日","募集の時間数（日） （複数回答可）":"相談可","募集の時間（〇時～〇時）":"8:30～17:30","担当者名":"佐藤","電話番号":"047-000-0002","連絡先メール":"sample2@example.com","HP":"https://example.com/funabashi","地図で見る":"千葉県船橋市本町2-2","種別 （複数回答可）":"グループホーム","事業所からの一言":"30分くらいで館内と仕事内容を説明します。"},{"ID":"F003","事業所の名称":"デイサービス 柏・元気クラブ","エリア":"東葛北部・東葛南部圏域","見学を受入できる対象者（複数回答可）":"6ヶ月以内に介護職を探すかもしれない","歓迎チェック （複数回答可）":"未経験OK, アルバイトから正社員","介護の仕事経験":"未経験OK","中高年世代の採用":"中高年歓迎","雇用形態":"アルバイト, アルバイトから正社員","募集の日数（週） （複数回答可）":"2,3日","募集の時間数（日） （複数回答可）":"相談可","募集の時間（〇時～〇時）":"10:00～15:00","担当者名":"見学担当","電話番号":"04-7100-0003","連絡先メール":"sample3@example.com","HP":"https://example.com/kashiwa","地図で見る":"千葉県柏市柏3-3","種別 （複数回答可）":"デイサービス","事業所からの一言":"70代のスタッフも活躍しています。"},{"ID":"F004","事業所の名称":"ケアハウス 成田の風","エリア":"印旛・香取・海匝圏域","見学を受入できる対象者（複数回答可）":"介護職にしようか迷っている, 3ヶ月以内に介護職を探すかもしれない","歓迎チェック （複数回答可）":"無資格OK, 中高年歓迎","介護の仕事経験":"未経験OK","中高年世代の採用":"中高年歓迎","雇用形態":"アルバイト","募集の日数（週） （複数回答可）":"相談可","募集の時間数（日） （複数回答可）":"2H","募集の時間（〇時～〇時）":"13:00～15:00","担当者名":"髙橋","電話番号":"0476-00-0004","連絡先メール":"sample4@example.com","HP":"なし","地図で見る":"千葉県成田市花崎町4-4","種別 （複数回答可）":"軽費老人ホーム","事業所からの一言":"無資格・未経験からのスタートも歓迎です。"},{"ID":"F005","事業所の名称":"訪問介護 木更津ステーション","エリア":"君津・安房圏域","見学を受入できる対象者（複数回答可）":"介護職を探している","歓迎チェック （複数回答可）":"有資格者のみ","介護の仕事経験":"経験者のみ","中高年世代の採用":"そのほか","雇用形態":"正社員","募集の日数（週） （複数回答可）":"週5日","募集の時間数（日） （複数回答可）":"6H以上","募集の時間（〇時～〇時）":"9:00～18:00","担当者名":"採用担当","電話番号":"0438-00-0005","連絡先メール":"sample5@example.com","HP":"https://example.com/kisarazu","地図で見る":"千葉県木更津市朝日5-5","種別 （複数回答可）":"訪問介護","事業所からの一言":"技術は、ことらで教えます。安心してください。"},{"ID":"F006","事業所の名称":"小規模多機能ホーム 茂原の里","エリア":"山武・長生・夷隅圏域","見学を受入できる対象者（複数回答可）":"将来介護職を探すかもしれない","歓迎チェック （複数回答可）":"未経験OK, 無資格OK","介護の仕事経験":"未経験OK","中高年世代の採用":"中高年歓迎","雇用形態":"アルバイト, 正社員","募集の日数（週） （複数回答可）":"週2日～","募集の時間数（日） （複数回答可）":"相談可","募集の時間（〇時～〇時）":"シフト制（応相談）","担当者名":"採用担当","電話番号":"0475-00-0006","連絡先メール":"sample6@example.com","HP":"なし","地図で見る":"千葉県茂原市道表6-6","種別 （複数回答可）":"小規模多機能","事業所からの一言":"見学は、スタッフが丁寧にご説明します。"},{"ID":"F007","事業所の名称":"有料老人ホーム 市川ガーデン","エリア":"東葛北部・東葛南部圏域","見学を受入できる対象者（複数回答可）":"介護職にしようか迷っている","歓迎チェック （複数回答可）":"無資格OK","介護の仕事経験":"未経験OK","中高年世代の採用":"そのほか","雇用形態":"正社員","募集の日数（週） （複数回答可）":"週5日","募集の時間数（日） （複数回答可）":"6H以上","募集の時間（〇時～〇時）":"9:00～18:00","担当者名":"山本","電話番号":"047-000-0007","連絡先メール":"sample7@example.com","HP":"https://example.com/ichikawa","地図で見る":"千葉県市川市八幡7-7","種別 （複数回答可）":"介護付き有料","事業所からの一言":"入門的研修の卒業も在籍中"},{"ID":"F008","事業所の名称":"サ高住 銚子シーサイド","エリア":"印旛・香取・海匝圏域","見学を受入できる対象者（複数回答可）":"将来介護職を探すかもしれない, 介護職にしようか迷っている","歓迎チェック （複数回答可）":"未経験OK, 中高年歓迎","介護の仕事経験":"未経験OK","中高年世代の採用":"中高年歓迎","雇用形態":"アルバイト","募集の日数（週） （複数回答可）":"相談可","募集の時間数（日） （複数回答可）":"相談可","募集の時間（〇時～〇時）":"9:00～12:00","担当者名":"中村","電話番号":"0479-00-0008","連絡先メール":"sample8@example.com","HP":"https://example.com/choshi","地図で見る":"千葉県銚子市三崎町8-8","種別 （複数回答可）":"サービス付き高齢者向け住宅","事業所からの一言":"いつでも受入OKです！"},{"ID":"F009","事業所の名称":"デイサービス 館山オーシャン","エリア":"君津・安房圏域","見学を受入できる対象者（複数回答可）":"介護職を探している","歓迎チェック （複数回答可）":"有資格者のみ","介護の仕事経験":"経験者のみ","中高年世代の採用":"中高年歓迎","雇用形態":"アルバイトから正社員","募集の日数（週） （複数回答可）":"3，4日","募集の時間数（日） （複数回答可）":"5H","募集の時間（〇時～〇時）":"10:00～16:00","担当者名":"小林","電話番号":"0470-00-0009","連絡先メール":"sample9@example.com","HP":"なし","地図で見る":"千葉県館山市北条9-9","種別 （複数回答可）":"デイサービス","事業所からの一言":"土日でもOK"},{"ID":"F010","事業所の名称":"特別養護老人ホーム 東金メドウ","エリア":"山武・長生・夷隅圏域","見学を受入できる対象者（複数回答可）":"3ヶ月以内に介護職を探すかもしれない","歓迎チェック （複数回答可）":"無資格OK, 未経験OK, アルバイト","介護の仕事経験":"未経験OK","中高年世代の採用":"そのほか","雇用形態":"アルバイト","募集の日数（週） （複数回答可）":"週3日程度","募集の時間数（日） （複数回答可）":"4H","募集の時間（〇時～〇時）":"13:00～17:00","担当者名":"加藤","電話番号":"0475-00-0010","連絡先メール":"sample10@example.com","HP":"https://example.com/togane","地図で見る":"千葉県東金市東金10-10","種別 （複数回答可）":"特別養護老人ホーム","事業所からの一言":"特養とデイの見学ができますよ。"}];
         
-        // お知らせデータ（静的）
-        const newsData = [
-            {
-                date: '2025/02/15',
-                title: 'サイトをオープンしました',
-                content: '千葉県かいごの職場見学BOXがオープンしました。気軽に介護の職場を見学できます。'
-            },
-            {
-                date: '2025/02/10',
-                title: '事業所の登録を開始',
-                content: '介護事業所の皆様、ぜひご登録ください。'
-            },
-            {
-                date: '2025/02/05',
-                title: '求職者の登録を開始',
-                content: '介護の仕事に興味がある方、まずは登録してみませんか？'
-            },
-            {
-                date: '2025/02/01',
-                title: 'システムテスト中',
-                content: 'サイトオープンに向けて準備中です。'
-            }
-        ];
+        let seekersData = [{"ID":"S001","仕事への興味":"将来介護職を探すかもしれない","お住まい":"千葉市稲毛区","性別":"男性","年齢":"20代","資格":"無資格","もし働くなら、どんな働き方？":"アルバイト","週に何日くらい？（アルバイト希望の方）":"2","1日何時間くらい？（アルバイト希望の方）":"3H","何時から何時くらい？":"午前中希望","聞きたいこと・不安なこと":"未経験でも大丈夫でしょうか？見学で雰囲気を見たいです。"},{"ID":"S002","仕事への興味":"介護職を探している","お住まい":"船橋市","性別":"女性","年齢":"40代","資格":"初任者研修","もし働くなら、どんな働き方？":"パート, 正社員","週に何日くらい？（アルバイト希望の方）":"4","1日何時間くらい？（アルバイト希望の方）":"5H","何時から何時くらい？":"10:00-15:00","聞きたいこと・不安なこと":"資格は持っていますがブランクがあります。研修制度について知りたいです。"},{"ID":"S003","仕事への興味":"介護職にしようか迷っている","お住まい":"木更津市","性別":"男性","年齢":"60代","資格":"その他","もし働くなら、どんな働き方？":"アルバイト","週に何日くらい？（アルバイト希望の方）":"3","1日何時間くらい？（アルバイト希望の方）":"4H","何時から何時くらい？":"午後のみ","聞きたいこと・不安なこと":"定年退職後の仕事として興味があります。体力面が少し不安です。"},{"ID":"S004","仕事への興味":"6ヶ月以内に介護職を探すかもしれない","お住まい":"成田市","性別":"女性","年齢":"30代","資格":"初任者研修受講中","もし働くなら、どんな働き方？":"正社員","週に何日くらい？（アルバイト希望の方）":"5","1日何時間くらい？（アルバイト希望の方）":"6H以上","何時から何時くらい？":"フルタイム","聞きたいこと・不安なこと":"現在資格取得中です。資格取得支援制度があるか聞きたいです。"},{"ID":"S005","仕事への興味":"3ヶ月以内に介護職を探すかもしれない","お住まい":"茂原市","性別":"男性","年齢":"20代","資格":"無資格","もし働くなら、どんな働き方？":"アルバイトから正社員","週に何日くらい？（アルバイト希望の方）":"4","1日何時間くらい？（アルバイト希望の方）":"6H以上","何時から何時くらい？":"相談可","聞きたいこと・不安なこと":"異業種からの転職を考えています。男性スタッフの割合を知りたいです。"}];
+        
+        let newsData = [{"お知らせ":"【合同就職説明会】千葉県かいごの仕事フェア","内容":"県内50法人が集まる合同説明会を開催します。未経験者歓迎コーナーもあります。","開催時期":"2024-03-15","HPリンク":"https://example.com/event1"},{"お知らせ":"【セミナー】はじめての介護職入門","内容":"介護の仕事の魅力や具体的な業務内容をわかりやすく解説するセミナーです。","開催時期":"2024-03-20","HPリンク":"https://example.com/event2"},{"お知らせ":"【見学キャンペーン】春の職場見学ウィーク","内容":"期間中に見学申込をされた方に、特製ノベルティをプレゼント！","開催時期":"2024-04-01","HPリンク":"https://example.com/campaign"},{"お知らせ":"システムメンテナンスのお知らせ","内容":"4月10日（水）AM2:00～AM5:00の間、システムメンテナンスのためサイトが閲覧できません。","開催時期":"2024-04-10","HPリンク":"なし"}];
 
-        // データ読み込み関数
-        async function loadData() {
-            try {
-                console.log('データ読み込み開始...');
-                
-                // 事業所データ取得
-                const facilitiesResponse = await fetch(`${API_BASE_URL}?type=facilities`);
-                facilitiesData = await facilitiesResponse.json();
-                
-                // 求職者データ取得
-                const seekersResponse = await fetch(`${API_BASE_URL}?type=seekers`);
-                seekersData = await seekersResponse.json();
-                
-                console.log('データ読み込み完了:', {
-                    facilities: facilitiesData.length,
-                    seekers: seekersData.length
-                });
-                
-                // 画面を初期化
-                initializeApp();
-                
-            } catch (error) {
-                console.error('データ読み込みエラー:', error);
-                const main = document.getElementById('main-content');
-                main.innerHTML = `
-                    <div class="text-center py-12">
-                        <div class="text-red-500 mb-4">
-                            <i data-lucide="alert-circle" class="w-12 h-12 mx-auto"></i>
-                        </div>
-                        <p class="text-slate-700 font-bold mb-2">データの読み込みに失敗しました</p>
-                        <p class="text-slate-500 text-sm mb-4">しばらくしてから再度お試しください。</p>
-                        <button onclick="location.reload()" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg">
-                            再読み込み
-                        </button>
-                    </div>
-                `;
-                setTimeout(() => lucide.createIcons(), 0);
-            }
-        }
-
-        // アプリ初期化関数
-        function initializeApp() {
+        // 初期化
+        document.addEventListener('DOMContentLoaded', () => {
             render();
-        }
+        });
 
         // 表示ロジック
         function render() {
@@ -188,7 +120,8 @@
             main.innerHTML = '';
             
             setTimeout(() => lucide.createIcons(), 0);
-            
+            updateAuthButton();
+
             if (currentView === 'home') {
                 renderHome(main);
             } else if (currentView === 'facilityList') {
@@ -196,221 +129,276 @@
             } else if (currentView === 'seekers') {
                 renderSeekers(main);
             }
-            
-            updateAuthButton();
         }
 
         function renderHome(container) {
-            container.innerHTML = `
-                <!-- ヒーロー -->
-                <section class="text-center py-8 fade-in">
-                    <div class="bg-gradient-to-r from-orange-400 to-orange-500 text-white p-6 rounded-2xl shadow-lg">
-                        <h2 class="text-2xl font-bold mb-2">介護の職場を、見に行こう。</h2>
-                        <p class="text-sm opacity-90">まずは気軽に見学してみませんか？</p>
-                    </div>
-                </section>
+            // ヒーローセクション
+            const heroSection = document.createElement('section');
+            heroSection.className = 'fade-in bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-6 text-center mb-6 relative overflow-hidden';
+            heroSection.style.backgroundImage = "linear-gradient(rgba(255, 247, 237, 0.88), rgba(254, 215, 170, 0.88)), url('https://i.pinimg.com/1200x/13/a5/c5/13a5c505d1f5dc7b4385e995ef82339d.jpg')";
+            heroSection.style.backgroundSize = 'cover';
+            heroSection.style.backgroundPosition = 'center';
+            heroSection.innerHTML = `
+                <div class="relative z-10">
+                    <h2 class="text-2xl font-bold text-slate-800 mb-3">「まずは見学」から<br/>はじめませんか？</h2>
+                    <p class="text-sm text-slate-600 mb-4">いきなり応募はハードルが高い…<br/>そんなあなたのための気軽な見学サイトです。</p>
+                    <a href="#" onclick="alert('準備中です。近日公開予定！'); return false;" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-colors w-full flex items-center justify-center gap-2">
+                        <i data-lucide="coffee" class="w-5 h-5"></i> 見学の流れを見る
+                    </a>
+                </div>
+            `;
+            container.appendChild(heroSection);
 
-                <!-- エリア選択 -->
-                <section class="fade-in">
-                    <div class="flex items-center gap-2 mb-4">
-                        <i data-lucide="map-pin" class="w-5 h-5 text-orange-500"></i>
-                        <h3 class="text-lg font-bold text-slate-800">エリアを選択</h3>
-                    </div>
-                    <div class="grid grid-cols-1 gap-3">
-                        ${areas.map(area => {
-                            const areaFacilities = facilitiesData.filter(f => f.area === area.code);
-                            return `
-                                <button onclick="handleAreaSelect('${area.id}')" class="bg-white hover:bg-orange-50 border-2 border-slate-200 hover:border-orange-500 p-4 rounded-xl text-left transition-all shadow-sm hover:shadow-md group">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center gap-3">
-                                            <div class="bg-slate-100 group-hover:bg-orange-100 p-2 rounded-lg transition-colors">
-                                                <i data-lucide="building-2" class="w-5 h-5 text-slate-500 group-hover:text-orange-500"></i>
-                                            </div>
-                                            <div>
-                                                <div class="font-bold text-slate-800 group-hover:text-orange-600 text-base">${area.name}</div>
-                                                <div class="text-xs text-slate-400 mt-0.5">${areaFacilities.length}件の事業所</div>
-                                            </div>
-                                        </div>
-                                        <i data-lucide="chevron-right" class="w-5 h-5 text-slate-300 group-hover:text-orange-500"></i>
-                                    </div>
-                                </button>
-                            `;
-                        }).join('')}
-                    </div>
-                </section>
+            // 見学の流れ・声セクション
+            const flowSection = document.createElement('section');
+            flowSection.className = 'fade-in mb-6';
+            flowSection.innerHTML = `
+                <div class="grid grid-cols-2 gap-3">
+                    <a href="#" onclick="alert('準備中です。近日公開予定！'); return false;" class="bg-white hover:bg-orange-50 border border-slate-200 rounded-lg p-4 text-center transition-colors">
+                        <i data-lucide="message-circle" class="w-6 h-6 mx-auto mb-2 text-orange-500"></i>
+                        <p class="text-sm font-bold text-slate-700">見学した人の声</p>
+                    </a>
+                    <a href="#" onclick="alert('準備中です。近日公開予定！'); return false;" class="bg-white hover:bg-orange-50 border border-slate-200 rounded-lg p-4 text-center transition-colors">
+                        <i data-lucide="building" class="w-6 h-6 mx-auto mb-2 text-orange-500"></i>
+                        <p class="text-sm font-bold text-slate-700">見学先事業所の声</p>
+                    </a>
+                </div>
+            `;
+            container.appendChild(flowSection);
 
-                <!-- お知らせ -->
-                <section class="fade-in">
-                    <div class="flex items-center gap-2 mb-4">
-                        <i data-lucide="megaphone" class="w-5 h-5 text-orange-500"></i>
-                        <h3 class="text-lg font-bold text-slate-800">お知らせ</h3>
+            // 千葉県福祉人材センターへのリンク
+            const linkSection = document.createElement('section');
+            linkSection.className = 'fade-in mb-6';
+            linkSection.innerHTML = `
+                <a href="https://www.chibakenshakyo.net" target="_blank" class="bg-white border border-slate-200 rounded-lg p-4 flex items-start gap-3 hover:bg-slate-50 transition-colors">
+                    <i data-lucide="globe" class="text-blue-500 w-5 h-5 shrink-0 mt-0.5"></i>
+                    <div class="flex-1">
+                        <p class="font-bold text-slate-700 mb-1">「千葉県福祉人材センター」でも見つかる。</p>
+                        <p class="text-xs text-slate-500">千葉県社会福祉協議会 公式サイトへ</p>
                     </div>
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 divide-y divide-slate-100 max-h-80 overflow-y-auto news-scroll">
-                        ${newsData.map(news => `
-                            <div class="p-4 hover:bg-slate-50 transition-colors">
-                                <div class="text-xs text-orange-500 font-bold mb-1">${news.date}</div>
-                                <div class="text-sm font-bold text-slate-800 mb-1">${news.title}</div>
-                                <div class="text-xs text-slate-600">${news.content}</div>
+                    <i data-lucide="external-link" class="text-slate-400 w-4 h-4"></i>
+                </a>
+            `;
+            container.appendChild(linkSection);
+
+            // お知らせセクション
+            const newsSection = document.createElement('section');
+            newsSection.className = 'fade-in mb-6';
+            newsSection.innerHTML = `
+                <div class="flex items-center gap-2 mb-3">
+                    <i data-lucide="bell" class="text-slate-400 w-4 h-4"></i>
+                    <h3 class="font-bold text-slate-700">お知らせ</h3>
+                </div>
+                <div class="bg-white rounded-lg border border-slate-200 p-4">
+                    <div class="overflow-y-auto news-scroll pr-2" style="max-height: 200px; scrollbar-width: thin; scrollbar-color: #cbd5e1 #f1f5f9;">
+                        ${newsData.map((item, index) => `
+                            <div class="py-2 ${index !== newsData.length - 1 ? 'border-b border-slate-100' : ''}">
+                                <div class="flex items-center justify-between mb-1">
+                                    <p class="text-xs text-slate-400">${item['開催時期']}</p>
+                                    ${item['HPリンク'] && item['HPリンク'] !== 'なし' ? `
+                                        <a href="${item['HPリンク']}" target="_blank" class="text-xs text-orange-500 hover:underline whitespace-nowrap">詳しく見る →</a>
+                                    ` : ''}
+                                </div>
+                                <p class="font-bold text-slate-700 text-sm">${item['お知らせ']}</p>
                             </div>
                         `).join('')}
                     </div>
-                </section>
+                </div>
             `;
+            container.appendChild(newsSection);
+
+            // エリア選択セクション
+            const areaSection = document.createElement('section');
+            areaSection.id = 'area-section';
+            areaSection.className = 'fade-in';
+            areaSection.innerHTML = `
+                <div class="flex items-center gap-2 mb-3">
+                    <i data-lucide="map" class="text-slate-400 w-4 h-4"></i>
+                    <h3 class="font-bold text-slate-700">エリアから探す</h3>
+                </div>
+                <div class="grid grid-cols-1 gap-3">
+                    ${areas.map(area => `
+                        <button onclick="handleAreaSelect('${area.id}')" class="bg-white hover:bg-slate-50 rounded-lg border border-slate-200 p-4 text-left transition-colors shadow-sm">
+                            <p class="font-bold text-slate-800 mb-1">${area.name}</p>
+                            <p class="text-xs text-slate-500">施設: ${facilitiesData.filter(f => f['エリア'] === area.code).length}件</p>
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+            container.appendChild(areaSection);
+
             setTimeout(() => lucide.createIcons(), 0);
         }
 
         function renderFacilityList(container) {
             const selectedArea = areas.find(a => a.id === selectedAreaId);
-            const areaFacilities = facilitiesData.filter(f => f.area === selectedArea.code);
-            
-            container.innerHTML = `
-                <!-- 戻るボタン -->
-                <div class="fade-in">
-                    <button onclick="showHome()" class="flex items-center gap-2 text-slate-600 hover:text-orange-500 mb-4 transition-colors">
-                        <i data-lucide="arrow-left" class="w-4 h-4"></i>
-                        <span class="text-sm font-bold">エリア選択に戻る</span>
-                    </button>
-                </div>
+            const facilities = facilitiesData.filter(f => f['エリア'] === selectedArea.code);
 
-                <!-- エリア名 -->
-                <section class="fade-in mb-6">
-                    <div class="bg-gradient-to-r from-orange-400 to-orange-500 text-white p-6 rounded-2xl shadow-lg">
-                        <div class="flex items-center gap-2 mb-2">
-                            <i data-lucide="map-pin" class="w-5 h-5"></i>
-                            <h2 class="text-xl font-bold">${selectedArea.name}</h2>
-                        </div>
-                        <p class="text-sm opacity-90">${areaFacilities.length}件の事業所が見つかりました</p>
+            const header = document.createElement('div');
+            header.className = 'mb-4 fade-in';
+            header.innerHTML = `
+                <button onclick="showHome()" class="flex items-center gap-1 text-sm text-slate-500 hover:text-orange-500 mb-3">
+                    <i data-lucide="chevron-left" class="w-4 h-4"></i> エリア選択に戻る
+                </button>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="building" class="text-slate-400 w-4 h-4"></i>
+                        <h3 class="font-bold text-slate-700">${selectedArea.name}</h3>
                     </div>
-                </section>
+                    <span class="text-xs bg-slate-200 px-2 py-1 rounded-full text-slate-600">${facilities.length}件</span>
+                </div>
+            `;
+            container.appendChild(header);
 
-                <!-- 事業所リスト -->
-                <section class="space-y-4 fade-in">
-                    ${areaFacilities.map(facility => {
-                        const isExpanded = expandedFacilityIds.has(facility.id);
-                        return `
-                            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                                <!-- カード上部（常に表示） -->
-                                <div class="p-4">
-                                    <div class="flex items-start justify-between gap-3 mb-3">
-                                        <h3 class="font-bold text-slate-800 text-base leading-snug">${facility.name}</h3>
-                                        <span class="shrink-0 text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full font-bold">${facility.facilityType || '-'}</span>
-                                    </div>
-                                    
-                                    ${renderDetailRow('エリア', facility.area)}
-                                    ${renderBulletList('歓迎', facility.tags)}
-                                    ${renderDetailRow('雇用形態', facility.employmentType)}
-                                    
-                                    <div class="mt-4 flex gap-2">
-                                        <button onclick="toggleDetails('${facility.id}')" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2">
-                                            <i data-lucide="${isExpanded ? 'chevron-up' : 'chevron-down'}" class="w-4 h-4"></i>
-                                            ${isExpanded ? '詳細を閉じる' : '詳細を見る'}
-                                        </button>
-                                        <a href="https://docs.google.com/forms/d/e/1FAIpQLScU7Nh4J20qB_Xs00XIkpyGyS3hjbDVdcugPVDckqcLyXri8A/viewform?entry.308812531=${facility.id}&entry.1322249521=${encodeURIComponent(facility.name)}" target="_blank" class="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2">
-                                            <i data-lucide="calendar" class="w-4 h-4"></i> 見学を申し込む
-                                        </a>
-                                    </div>
-                                </div>
+            const list = document.createElement('div');
+            list.className = 'space-y-4';
 
-                                <!-- 詳細情報（展開時のみ表示） -->
-                                ${isExpanded ? `
-                                    <div class="bg-slate-50 p-4 border-t border-slate-200 space-y-3">
-                                        ${renderDetailRow('受入対象者', facility.target)}
-                                        ${renderDetailRow('経験', facility.experience)}
-                                        ${renderDetailRow('年齢', facility.age)}
-                                        ${renderDetailRow('週の勤務日数', facility.daysPerWeek)}
-                                        ${renderDetailRow('1日の時間', facility.hoursPerDay)}
-                                        ${renderDetailRow('勤務時間', facility.workingHours)}
-                                        ${renderDetailRow('担当者', facility.contactPerson)}
-                                        ${renderDetailRow('電話', facility.phone)}
-                                        ${renderDetailRow('メール', facility.email)}
-                                        ${renderDetailRow('住所', facility.address)}
-                                        ${facility.website && facility.website !== 'なし' ? `
-                                            <div class="flex items-start text-sm">
-                                                <span class="w-24 shrink-0 text-slate-400 font-bold text-xs pt-0.5">HP</span>
-                                                <a href="${facility.website}" target="_blank" class="text-orange-500 hover:text-orange-600 underline font-medium break-all">${facility.website}</a>
-                                            </div>
-                                        ` : ''}
-                                        ${facility.description ? `
-                                            <div class="bg-white p-3 rounded-lg border border-slate-200">
-                                                <div class="text-xs text-slate-400 font-bold mb-1">事業所からの一言</div>
-                                                <div class="text-sm text-slate-700">${facility.description}</div>
-                                            </div>
-                                        ` : ''}
+            if (facilities.length === 0) {
+                list.innerHTML = '<p class="text-center text-slate-500 py-8">該当する施設がありません</p>';
+            } else {
+                facilities.forEach(facility => {
+                    const isExpanded = expandedFacilityIds.has(facility['ID']);
+                    const card = document.createElement('div');
+                    card.className = 'bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden fade-in';
+                    
+                    const tags = [];
+                    if (facility['歓迎チェック （複数回答可）']) {
+                        facility['歓迎チェック （複数回答可）'].split(',').forEach(t => {
+                            const tag = t.trim();
+                            if (tag) tags.push(tag);
+                        });
+                    }
+
+                    card.innerHTML = `
+                        <div class="p-5">
+                            <div class="mb-3">
+                                <h4 class="font-bold text-slate-800 text-lg mb-2">${facility['事業所の名称'] || ''}</h4>
+                                ${tags.length > 0 ? `
+                                    <div class="flex flex-wrap gap-1.5 mb-2">
+                                        ${tags.map(tag => `<span class="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full">${tag}</span>`).join('')}
                                     </div>
                                 ` : ''}
+                                <p class="text-sm text-slate-600 flex items-center gap-1 mb-2">
+                                    <i data-lucide="map-pin" class="w-3.5 h-3.5"></i> ${facility['地図で見る'] || ''}
+                                </p>
+                                ${facility['事業所からの一言'] ? `
+                                    <p class="text-sm text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-100">${facility['事業所からの一言']}</p>
+                                ` : ''}
                             </div>
-                        `;
-                    }).join('')}
-                </section>
-            `;
-            
+
+                            <div class="bg-slate-50 p-3 rounded-lg mb-3 mt-3">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <i data-lucide="user" class="text-slate-400 w-4 h-4"></i>
+                                    <p class="text-sm font-bold text-slate-700">担当: ${facility['担当者名'] || ''}</p>
+                                </div>
+                                <div class="flex gap-2">
+                                    <a href="tel:${facility['電話番号']}" class="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold py-2.5 rounded-lg text-center flex items-center justify-center gap-1.5 shadow transition-colors">
+                                        <i data-lucide="phone" class="w-4 h-4"></i> 電話で申込
+                                    </a>
+                                    <a href="https://docs.google.com/forms/d/e/1FAIpQLScU7Nh4J20qB_Xs00XIkpyGyS3hjbDVdcugPVDckqcLyXri8A/viewform?entry.308812531=${facility['ID']}&entry.1322249521=${encodeURIComponent(facility['事業所の名称'])}" target="_blank" class="flex-1 bg-white hover:bg-slate-50 text-slate-700 text-sm font-bold py-2.5 rounded-lg border border-slate-200 text-center flex items-center justify-center gap-1.5 shadow-sm transition-colors">
+                                        <i data-lucide="mail" class="w-4 h-4"></i> メールで申込
+                                    </a>
+                                </div>
+                            </div>
+
+                            <button onclick="toggleDetails('${facility['ID']}')" class="w-full flex items-center justify-center gap-1 text-sm font-bold py-2.5 rounded-lg border transition-colors ${isExpanded ? 'bg-slate-100 text-slate-600 border-slate-200' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}">
+                                ${isExpanded ? '閉じる' : '募集内容を見る'}
+                                <i data-lucide="${isExpanded ? 'chevron-up' : 'chevron-down'}" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                        ${isExpanded ? `
+                        <div class="bg-slate-50 border-t border-slate-100 p-4 text-sm fade-in">
+                            <h5 class="font-bold text-slate-700 mb-3 flex items-center gap-2"><i data-lucide="eye" class="text-orange-500 w-4 h-4"></i> 見学受入</h5>
+                            <div class="mb-5">
+                                ${renderBulletList('対象者', facility['見学を受入できる対象者（複数回答可）'])}
+                            </div>
+                            
+                            <h5 class="font-bold text-slate-700 mb-3 flex items-center gap-2"><i data-lucide="briefcase" class="text-orange-500 w-4 h-4"></i> 募集内容</h5>
+                            <div class="space-y-3 mb-5">
+                                ${renderDetailRow('種別', facility['種別 （複数回答可）'])}
+                                ${renderDetailRow('資格', facility['歓迎チェック （複数回答可）'])}
+                                ${renderDetailRow('経験', facility['介護の仕事経験'])}
+                                ${renderDetailRow('中高年', facility['中高年世代の採用'])}
+                                <div class="h-px bg-slate-200 my-2"></div>
+                                ${renderDetailRow('雇用形態', facility['雇用形態'])}
+                                ${renderDetailRow('日数', facility['募集の日数（週） （複数回答可）'])}
+                                ${renderDetailRow('時間数', facility['募集の時間数（日） （複数回答可）'])}
+                                ${renderDetailRow('勤務時間', facility['募集の時間（〇時～〇時）'])}
+                            </div>
+                            <h5 class="font-bold text-slate-700 mb-3 flex items-center gap-2"><i data-lucide="map" class="text-orange-500 w-4 h-4"></i> マップ</h5>
+                            <div class="flex gap-2">
+                                ${facility['地図で見る'] ? `
+                                    <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(facility['地図で見る'])}" target="_blank" class="flex-1 bg-white hover:bg-slate-100 text-slate-700 py-3 rounded-lg border border-slate-200 text-center text-xs font-bold flex items-center justify-center gap-2 shadow-sm">
+                                        <i data-lucide="map-pin" class="text-red-500 w-4 h-4"></i> Googleマップ
+                                    </a>
+                                ` : ''}
+                                ${facility['HP'] && facility['HP'] !== 'なし' ? `
+                                    <a href="${facility['HP']}" target="_blank" class="flex-1 bg-white hover:bg-slate-100 text-slate-700 py-3 rounded-lg border border-slate-200 text-center text-xs font-bold flex items-center justify-center gap-2 shadow-sm">
+                                        <i data-lucide="globe" class="text-blue-500 w-4 h-4"></i> ホームページ
+                                    </a>
+                                ` : ''}
+                            </div>
+                        </div>` : ''}
+                    `;
+                    list.appendChild(card);
+                });
+            }
+            container.appendChild(list);
             setTimeout(() => lucide.createIcons(), 0);
         }
 
         function renderSeekers(container) {
-            if (!isAuthenticated) {
-                showHome();
-                return;
-            }
-            
             container.innerHTML = `
-                <!-- 戻るボタン -->
-                <div class="fade-in">
-                    <button onclick="showHome()" class="flex items-center gap-2 text-slate-600 hover:text-orange-500 mb-4 transition-colors">
-                        <i data-lucide="arrow-left" class="w-4 h-4"></i>
-                        <span class="text-sm font-bold">ホームに戻る</span>
-                    </button>
-                </div>
-
-                <!-- ヘッダー -->
-                <section class="fade-in mb-6">
-                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-2xl shadow-lg">
-                        <div class="flex items-center gap-2 mb-2">
-                            <i data-lucide="users" class="w-5 h-5"></i>
-                            <h2 class="text-xl font-bold">見学希望者リスト</h2>
-                        </div>
-                        <p class="text-sm opacity-90">${seekersData.length}名の求職者が登録中</p>
+                <div class="bg-slate-100 border border-slate-200 rounded-xl p-4 flex items-start gap-3 mb-6 fade-in">
+                    <i data-lucide="lock" class="text-slate-500 shrink-0 w-4 h-4 mt-0.5"></i>
+                    <div>
+                        <p class="text-sm font-bold text-slate-700">閲覧モード: 事業所専用</p>
+                        <p class="text-xs text-slate-500 mt-1">※ここは一般公開されていません。</p>
                     </div>
-                </section>
-
-                <!-- 求職者リスト -->
-                <section class="space-y-4 fade-in">
-                    ${seekersData.map(seeker => `
-                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-                            <div class="flex items-start justify-between gap-3 mb-3">
-                                <div>
-                                    <div class="font-bold text-slate-800 text-base mb-1">求職者ID: ${seeker.id}</div>
+                </div>
+                <section class="fade-in">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="user" class="text-slate-400 w-4 h-4"></i>
+                            <h3 class="font-bold text-slate-700">見学希望者リスト</h3>
+                        </div>
+                        <span class="text-xs bg-slate-200 px-2 py-1 rounded-full text-slate-600">${seekersData.length}名</span>
+                    </div>
+                    <div class="space-y-4">
+                        ${seekersData.map(seeker => `
+                            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 relative overflow-hidden">
+                                <div class="absolute top-0 left-0 w-1.5 h-full bg-slate-400"></div>
+                                <div class="flex justify-between items-start mb-3 pl-2">
                                     <div class="flex items-center gap-2">
-                                        <span class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full font-bold">${seeker.interest}</span>
+                                        <span class="bg-slate-800 text-white text-xs font-mono px-2 py-1 rounded">ID: ${seeker['ID']}</span>
+                                        <span class="font-bold text-slate-700">${seeker['年齢']} / ${seeker['性別']}</span>
+                                    </div>
+                                    <span class="text-xs font-bold text-slate-600 bg-orange-50 px-2 py-1 rounded-md border border-orange-200">働くとしたら：${seeker['もし働くなら、どんな働き方？']}</span>
+                                </div>
+                                <div class="pl-2 space-y-3">
+                                    <div class="flex items-center gap-2 text-sm text-slate-600">
+                                        <i data-lucide="check-circle" class="text-slate-400 w-4 h-4"></i>
+                                        <span class="font-bold">${seeker['資格']}</span>
+                                        <span class="text-slate-400">|</span>
+                                        <span>${seeker['お住まい']}</span>
+                                    </div>
+                                    <div class="text-xs text-slate-500 space-y-1">
+                                        <p><strong>仕事への興味:</strong> ${seeker['仕事への興味']}</p>
+                                        ${seeker['週に何日くらい？（アルバイト希望の方）'] ? `<p><strong>週の日数:</strong> ${seeker['週に何日くらい？（アルバイト希望の方）']}</p>` : ''}
+                                        ${seeker['1日何時間くらい？（アルバイト希望の方）'] ? `<p><strong>時間数:</strong> ${seeker['1日何時間くらい？（アルバイト希望の方）']}</p>` : ''}
+                                        ${seeker['何時から何時くらい？'] ? `<p><strong>希望時間:</strong> ${seeker['何時から何時くらい？']}</p>` : ''}
+                                    </div>
+                                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-100 text-sm text-slate-600 leading-relaxed">${seeker['聞きたいこと・不安なこと'] || '特になし'}</div>
+                                    <div class="mt-3">
+                                        <a href="https://docs.google.com/forms/d/e/1FAIpQLSdtx3pwHHeVGRPZhuwWke8bRkaSM4dEvyDi48cKAiT4eMPWlA/viewform?entry.1369073720=${seeker['ID']}" target="_blank" class="w-full bg-white border-2 border-slate-400 text-slate-600 hover:bg-slate-50 font-bold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2">
+                                            <i data-lucide="mail" class="w-4 h-4"></i> 見学にお誘いする
+                                        </a>
+                                        <p class="text-xs text-slate-400 text-center mt-2">※対象者から返信がない場合もあります。ご了承ください。</p>
                                     </div>
                                 </div>
                             </div>
-                            
-                            <div class="space-y-2">
-                                ${renderDetailRow('お住まい', seeker.location)}
-                                ${renderDetailRow('性別', seeker.gender)}
-                                ${renderDetailRow('年齢', seeker.age)}
-                                ${renderDetailRow('資格', seeker.qualification)}
-                                ${renderDetailRow('働き方', seeker.employmentType)}
-                                ${renderDetailRow('週の希望', seeker.daysPerWeek)}
-                                ${renderDetailRow('1日の時間', seeker.hoursPerDay)}
-                                ${renderDetailRow('時間帯', seeker.workingHours)}
-                                ${seeker.concerns ? `
-                                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 mt-3">
-                                        <div class="text-xs text-slate-400 font-bold mb-1">聞きたいこと・不安なこと</div>
-                                        <div class="text-sm text-slate-700">${seeker.concerns}</div>
-                                    </div>
-                                ` : ''}
-                            </div>
-                            
-                            <div class="mt-3">
-                                <a href="https://docs.google.com/forms/d/e/1FAIpQLSdtx3pwHHeVGRPZhuwWke8bRkaSM4dEvyDi48cKAiT4eMPWlA/viewform?entry.1369073720=${seeker.id}" target="_blank" class="w-full bg-white border-2 border-slate-400 text-slate-600 hover:bg-slate-50 font-bold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2">
-                                    <i data-lucide="mail" class="w-4 h-4"></i> 見学にお誘いする
-                                </a>
-                                <p class="text-xs text-slate-400 text-center mt-2">※対象者から返信がない場合もあります。ご了承ください。</p>
-                            </div>
-                        </div>
-                    `).join('')}
+                        `).join('')}
+                    </div>
                 </section>
             `;
             
@@ -519,9 +507,6 @@
                 handleAuth();
             }
         });
-
-        // ページ読み込み時にデータを取得
-        window.addEventListener('DOMContentLoaded', loadData);
     </script>
 </body>
 </html>
