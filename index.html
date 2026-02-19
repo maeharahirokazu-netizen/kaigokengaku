@@ -89,11 +89,11 @@
 
         // エリア定義
         const areas = [
-            { id: 'chiba-ichihara', name: '千葉・市原圏域', code: '千葉・市原圏域' },
-            { id: 'togane', name: '東葛北部・東葛南部圏域', code: '東葛北部・東葛南部圏域' },
-            { id: 'inba', name: '印旛・香取・海匝圏域', code: '印旛・香取・海匝圏域' },
-            { id: 'kimitsu', name: '君津・安房圏域', code: '君津・安房圏域' },
-            { id: 'sanbu', name: '山武・長生・夷隅圏域', code: '山武・長生・夷隅圏域' }
+            { id: 'togane', name: '東葛北部・東葛南部圏域', code: '東葛北部・東葛南部圏域', cities: '(松戸市、野田市、柏市、流山市、我孫子市、鎌ケ谷市、市川市、船橋市、習志野市、八千代市、浦安市)' },
+            { id: 'chiba-ichihara', name: '千葉・市原圏域', code: '千葉・市原圏域', cities: '(千葉市、市原市)' },
+            { id: 'inba', name: '印旛・香取・海匝圏域', code: '印旛・香取・海匝圏域', cities: '(成田市、佐倉市、四街道市、八街市、印西市、白井市、富里市、酒々井町、栄町、香取市、神崎町、多古町、東庄町、銚子市、旭市、匝瑳市)' },
+            { id: 'kimitsu', name: '君津・安房圏域', code: '君津・安房圏域', cities: '(木更津市、君津市、富津市、袖ケ浦市、館山市、鴨川市、南房総市、鋸南町)' },
+            { id: 'sanbu', name: '山武・長生・夷隅圏域', code: '山武・長生・夷隅圏域', cities: '(東金市、山武市、大網白里市、九十九里町、芝山町、横芝光町、茂原市、一宮町、睦沢町、長生村、白子町、長柄町、長南町、勝浦市、いすみ市、大多喜町、御宿町)' }
         ];
 
         // 状態管理
@@ -132,62 +132,55 @@
         }
 
         function renderHome(container) {
-            // ヒーローセクション
+            // ヒーローセクション（オレンジ枠）
             const heroSection = document.createElement('section');
-            heroSection.className = 'fade-in bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-6 text-center mb-6 relative overflow-hidden';
-            heroSection.style.backgroundImage = "linear-gradient(rgba(255, 247, 237, 0.88), rgba(254, 215, 170, 0.88)), url('https://electrictoolboy.com/media/wp-content/uploads/2021/09/image-21.jpeg')";
+            heroSection.className = 'fade-in bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-5 mb-4 relative overflow-hidden border-2 border-orange-200';
+            heroSection.style.backgroundImage = "linear-gradient(rgba(255, 247, 237, 0.88), rgba(254, 215, 170, 0.88)), url('https://user0514.cdnw.net/shared/img/thumb/roujinIMGL8123_TP_V.jpg')";
             heroSection.style.backgroundSize = 'cover';
-            heroSection.style.backgroundPosition = 'center';
+            heroSection.style.backgroundPosition = 'right top';
             heroSection.innerHTML = `
                 <div class="relative z-10">
-                    <h2 class="text-2xl font-bold text-slate-800 mb-3">「まずは見学」から<br/>はじめませんか？</h2>
-                    <p class="text-sm text-slate-600 mb-4">いきなり応募はハードルが高い…<br/>そんなあなたのための気軽な見学サイトです。</p>
-                    <a href="#" onclick="alert('準備中です。近日公開予定！'); return false;" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-colors w-full flex items-center justify-center gap-2">
+                    <h2 class="text-2xl font-bold text-slate-800 mb-2">「まずは見学」から<br/>はじめませんか？</h2>
+                    <p class="text-sm text-slate-600 mb-3">いきなり応募はハードルが高い…<br/>そんなあなたのための気軽な見学サイトです。</p>
+                    <a href="#" onclick="alert('準備中です。近日公開予定！'); return false;" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-colors w-full flex items-center justify-center gap-2 mb-3">
                         <i data-lucide="coffee" class="w-5 h-5"></i> 見学の流れを見る
                     </a>
+                    
+                    <!-- 見学した人の声・見学先事業所の声 -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <a href="#" onclick="alert('準備中です。近日公開予定！'); return false;" class="bg-white hover:bg-orange-50 border border-orange-200 rounded-lg p-3 text-center transition-colors">
+                            <i data-lucide="message-circle" class="w-5 h-5 mx-auto mb-1 text-orange-500"></i>
+                            <p class="text-xs font-bold text-slate-700">見学した人の声</p>
+                        </a>
+                        <a href="#" onclick="alert('準備中です。近日公開予定！'); return false;" class="bg-white hover:bg-orange-50 border border-orange-200 rounded-lg p-3 text-center transition-colors">
+                            <i data-lucide="building" class="w-5 h-5 mx-auto mb-1 text-orange-500"></i>
+                            <p class="text-xs font-bold text-slate-700">見学先事業所の声</p>
+                        </a>
+                    </div>
                 </div>
             `;
             container.appendChild(heroSection);
 
-            // 登録フォームボタン
+            // 登録フォームボタン（白色、オレンジアイコン）
             const registrationSection = document.createElement('section');
-            registrationSection.className = 'fade-in mb-6';
+            registrationSection.className = 'fade-in mb-2';
             registrationSection.innerHTML = `
                 <div class="grid grid-cols-2 gap-3">
-                    <a href="https://docs.google.com/forms/d/e/1FAIpQLSdV-R8QIhW8V44nbvqP6lJyvnXW-5bfWPg5k5vZNtXuOGb9Iw/viewform" target="_blank" class="bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-xl text-center transition-all shadow-sm hover:shadow-md">
-                        <i data-lucide="building-2" class="w-6 h-6 mx-auto mb-2"></i>
+                    <a href="https://docs.google.com/forms/d/e/1FAIpQLSdV-R8QIhW8V44nbvqP6lJyvnXW-5bfWPg5k5vZNtXuOGb9Iw/viewform" target="_blank" class="bg-white hover:bg-orange-50 text-slate-700 p-4 rounded-xl transition-all shadow-sm hover:shadow-md border border-slate-200 flex items-center gap-2">
+                        <i data-lucide="building-2" class="w-6 h-6 text-orange-500 shrink-0"></i>
                         <p class="text-sm font-bold">事業所の方はこちら</p>
-                        <p class="text-xs opacity-90 mt-1">登録フォーム</p>
                     </a>
-                    <a href="https://docs.google.com/forms/d/e/1FAIpQLSfiiBMhnuQpY6-Mag9PZo7wJoMm604Y_9r4IKCPuRGCwjMPVg/viewform" target="_blank" class="bg-green-500 hover:bg-green-600 text-white p-4 rounded-xl text-center transition-all shadow-sm hover:shadow-md">
-                        <i data-lucide="user-check" class="w-6 h-6 mx-auto mb-2"></i>
+                    <a href="https://docs.google.com/forms/d/e/1FAIpQLSfiiBMhnuQpY6-Mag9PZo7wJoMm604Y_9r4IKCPuRGCwjMPVg/viewform" target="_blank" class="bg-white hover:bg-orange-50 text-slate-700 p-4 rounded-xl transition-all shadow-sm hover:shadow-md border border-slate-200 flex items-center gap-2">
+                        <i data-lucide="user-check" class="w-6 h-6 text-orange-500 shrink-0"></i>
                         <p class="text-sm font-bold">見学希望の方はこちら</p>
-                        <p class="text-xs opacity-90 mt-1">登録フォーム</p>
                     </a>
                 </div>
             `;
             container.appendChild(registrationSection);
 
-            // 見学の流れ・声セクション
-            const flowSection = document.createElement('section');
-            flowSection.className = 'fade-in mb-6';
-            flowSection.innerHTML = `
-                <div class="grid grid-cols-2 gap-3">
-                    <a href="#" onclick="alert('準備中です。近日公開予定！'); return false;" class="bg-white hover:bg-orange-50 border border-slate-200 rounded-lg p-4 text-center transition-colors">
-                        <i data-lucide="message-circle" class="w-6 h-6 mx-auto mb-2 text-orange-500"></i>
-                        <p class="text-sm font-bold text-slate-700">見学した人の声</p>
-                    </a>
-                    <a href="#" onclick="alert('準備中です。近日公開予定！'); return false;" class="bg-white hover:bg-orange-50 border border-slate-200 rounded-lg p-4 text-center transition-colors">
-                        <i data-lucide="building" class="w-6 h-6 mx-auto mb-2 text-orange-500"></i>
-                        <p class="text-sm font-bold text-slate-700">見学先事業所の声</p>
-                    </a>
-                </div>
-            `;
-            container.appendChild(flowSection);
-
             // 千葉県福祉人材センターへのリンク
             const linkSection = document.createElement('section');
-            linkSection.className = 'fade-in mb-6';
+            linkSection.className = 'fade-in mb-2';
             linkSection.innerHTML = `
                 <a href="https://www.chibakenshakyo.net" target="_blank" class="bg-white border border-slate-200 rounded-lg p-4 flex items-start gap-3 hover:bg-slate-50 transition-colors">
                     <i data-lucide="globe" class="text-blue-500 w-5 h-5 shrink-0 mt-0.5"></i>
@@ -202,7 +195,7 @@
 
             // お知らせセクション
             const newsSection = document.createElement('section');
-            newsSection.className = 'fade-in mb-6';
+            newsSection.className = 'fade-in mb-4';
             newsSection.innerHTML = `
                 <div class="flex items-center gap-2 mb-3">
                     <i data-lucide="bell" class="text-slate-400 w-4 h-4"></i>
@@ -239,6 +232,7 @@
                     ${areas.map(area => `
                         <button onclick="handleAreaSelect('${area.id}')" class="bg-white hover:bg-slate-50 rounded-lg border border-slate-200 p-4 text-left transition-colors shadow-sm">
                             <p class="font-bold text-slate-800 mb-1">${area.name}</p>
+                            <p class="text-xs text-slate-400 mb-2">${area.cities || ''}</p>
                             <p class="text-xs text-slate-500">施設: ${facilitiesData.filter(f => f['エリア'] === area.code).length}件</p>
                         </button>
                     `).join('')}
@@ -311,9 +305,9 @@
                                     <p class="text-sm font-bold text-slate-700">担当: ${facility['担当者名'] || ''}</p>
                                 </div>
                                 <div class="flex gap-2">
-                                    <a href="tel:${facility['電話番号']}" class="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold py-2.5 rounded-lg text-center flex items-center justify-center gap-1.5 shadow transition-colors">
+                                    <button onclick="showAndCallPhone('${facility['電話番号']}', '${facility['事業所の名称']}')" class="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold py-2.5 rounded-lg text-center flex items-center justify-center gap-1.5 shadow transition-colors">
                                         <i data-lucide="phone" class="w-4 h-4"></i> 電話で申込
-                                    </a>
+                                    </button>
                                     <a href="https://docs.google.com/forms/d/e/1FAIpQLScU7Nh4J20qB_Xs00XIkpyGyS3hjbDVdcugPVDckqcLyXri8A/viewform?entry.308812531=${facility['ID']}&entry.1322249521=${encodeURIComponent(facility['事業所の名称'])}" target="_blank" class="flex-1 bg-white hover:bg-slate-50 text-slate-700 text-sm font-bold py-2.5 rounded-lg border border-slate-200 text-center flex items-center justify-center gap-1.5 shadow-sm transition-colors">
                                         <i data-lucide="mail" class="w-4 h-4"></i> メールで申込
                                     </a>
@@ -518,6 +512,21 @@
             isAuthenticated = false;
             currentView = 'home';
             render();
+        }
+
+        // 電話番号表示・発信機能
+        function showAndCallPhone(phone, facilityName) {
+            if (!phone) {
+                alert('電話番号が登録されていません');
+                return;
+            }
+            
+            // 確認ダイアログで電話番号を表示
+            const makeCall = confirm(`${facilityName || '事業所'}\n\n電話番号: ${phone}\n\n発信しますか？`);
+            
+            if (makeCall) {
+                window.location.href = `tel:${phone}`;
+            }
         }
 
         // Enterキーでパスワード認証
